@@ -1,0 +1,4 @@
+iname = ''    # name of this ubforever instance (alphanumeric only)
+startcmd = '' # command to start the program
+stopcmd = ''  # command to stop the program
+wait = 3.5    # how many seconds to wait in between restarts
