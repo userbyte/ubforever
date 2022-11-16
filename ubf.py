@@ -3,7 +3,7 @@
 import subprocess as sbp
 import sys, asyncio, time, toml, signal, os
 
-version = '0.0.3.1'
+version = '0.0.3.2'
 
 mypid = os.getpid()
 iname = 'untitled' # default iname
@@ -13,6 +13,8 @@ def printubf(s):
     print('[UBF] '+s)
 
 def cleanup():
+    try: cfg
+    except NameError: return False
     printubf('deleting pid file...')
     try:
         os.remove(f'/tmp/ubf/ubf-{iname}.pid')
@@ -49,6 +51,8 @@ def signal_handler(signum, frame):
         printubf(f'{signame} has been caught. idk what to do with this, ignoring it')
 
 def run_stopcmd():
+    try: cfg
+    except NameError: return False
     printubf(f'Running stopcmd: {stopcmd}')
     p = sbp.Popen(f"{stopcmd}", shell=True)
     p.wait()
@@ -69,14 +73,28 @@ try:
         cfg = toml.load(f)
 except FileNotFoundError:
     printubf('Current directory is missing a config file! (ubf_cfg.toml)')
-    printubf('A config file is required. Exiting...')
-    sys.exit(2)
+    # printubf('A config file is required. Exiting...')
+    yn = input('Create one? [Y/N]: ')
+    if yn.lower() in ['y','yes']:
+        cfg = {
+            "iname": input('instance name: '),
+            "startcmd": input('start command: '),
+            "stopcmd": input('stop command: '),
+            "wait": int(input('wait interval: '))
+        }
+        printubf(f'Saving config to {os.getcwd()}/ubf_cfg.toml...')
+        with open('./ubf_cfg.toml', 'w') as f:
+            toml.dump(cfg, f, encoder=None)
+        printubf('Starting UBForever')
+    else:
+        printubf('Exiting...')
+        sys.exit(2)
 
 try:
+    iname = cfg['iname']
     startcmd = cfg['startcmd']
     stopcmd = cfg['stopcmd']
     wait = cfg['wait']
-    iname = cfg['iname']
 except KeyError as e:
     printubf(f'Config is missing required value: {e}')
 else: 
@@ -85,7 +103,7 @@ else:
 # i should probably use /run but that requires root permissions i think... so ill just use tmp instead
 if not os.path.exists('/tmp/ubf'):
     os.mkdir('/tmp/ubf')
-    printubf('created /tmp/ubf')
+    # printubf('Created /tmp/ubf')
 
 with open(f'/tmp/ubf/ubf-{iname}.pid', 'w') as f:
     f.write(str(mypid))
