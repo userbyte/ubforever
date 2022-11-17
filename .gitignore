@@ -5,3 +5,4 @@ restart_ubfchild.sh
 apsctest.py
 release/
 mkrelease.sh
+dl-and-install-ubf.sh
