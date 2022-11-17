@@ -29,9 +29,18 @@ class ap(argparse.ArgumentParser):
         sys.exit(2)
 
 parser = ap()
-parser.add_argument("action", help="action to perform", choices=['start', 'stop', 'restart', 'terminate'])
-parser.add_argument("instance", help="name of target ubforever instance")
-args = parser.parse_args()
+subparsers = parser.add_subparsers(dest="subcommand")
+
+def argument(*name_or_flags, **kwargs):
+    return (list(name_or_flags), kwargs)
+
+def subcommand(name, args=[], parent=subparsers):
+    def decorator(func):
+        parser = parent.add_parser(name, description=func.__doc__)
+        for arg in args:
+            parser.add_argument(*arg[0], **arg[1])
+        parser.set_defaults(func=func)
+    return decorator
 
 def ubfsendsig(iname, signum):
     """send a signal to a given ubf instance name"""
@@ -47,25 +56,58 @@ def ubfsendsig(iname, signum):
     except Exception as e:
         print(f'ubfsendsig unknown error: {e}')
 
-if __name__ == "__main__":
-    if len(sys.argv) == 1:
-        parser.print_help(sys.stderr)
-        sys.exit(1)
-    if args.action == 'start':
-        print(f'sending start signal to ubf[{args.instance}]')
-        ubfsendsig(args.instance, signal.SIGUSR1)
-    elif args.action == 'stop':
-        print(f'sending stop signal to ubf[{args.instance}]')
-        ubfsendsig(args.instance, signal.SIGUSR2)
-    elif args.action == 'restart':
-        print(f'sending restart signal to ubf[{args.instance}]')
-        ubfsendsig(args.instance, signal.SIGTSTP)
-    elif args.action == 'terminate':
+# -- commands --
+
+@subcommand("list")
+def c_list(args):
+    """list running ubforever instances"""
+    print(f'searching for ubf instances...')
+    fi = {}
+    for fn in os.listdir('/tmp/ubf'):
+        with open(f'/tmp/ubf/{fn}') as f:
+            ipid = f.read()
+        iname = fn.replace('ubf-','').replace('.pid','') # carve out instance name from its pid file
+        fi.update({iname:ipid})
+    for i in fi:
+        print(f'found: {i} ({fi[i]})')
+
+@subcommand("start", [argument("instance", help="name of target ubforever instance")])
+def c_start(args):
+    """tell a ubf instance to start it's thing (if its not already running)"""
+    print(f'sending start signal to ubf[{args.instance}]')
+    ubfsendsig(args.instance, signal.SIGUSR1)
+
+@subcommand("stop", [argument("instance", help="name of target ubforever instance")])
+def c_stop(args):
+    """tell a ubf instance to stop it's thing"""
+    print(f'sending stop signal to ubf[{args.instance}]')
+    ubfsendsig(args.instance, signal.SIGUSR2)
+
+@subcommand("restart", [argument("instance", help="name of target ubforever instance")])
+def c_restart(args):
+    """tell a ubf instance to restart it's thing"""
+    print(f'sending restart signal to ubf[{args.instance}]')
+    ubfsendsig(args.instance, signal.SIGTSTP)
+
+@subcommand("terminate", [argument("-y", "--yes", help="assume yes", required=False, action="store_true"), argument("instance", help="name of target ubforever instance")])
+def c_terminate(args):
+    """tell a ubf instance to kill itself"""
+    if args.yes:
+        print(f'sending terminate signal to ubf[{args.instance}]')
+        ubfsendsig(args.instance, signal.SIGTERM)
+    else:
         yn = input('are you sure you want to terminate this instance of ubforever (it will need to be restart manually)? [y/n]: ')
         if yn.lower() in ['y','yes']:
             print(f'sending terminate signal to ubf[{args.instance}]')
             ubfsendsig(args.instance, signal.SIGTERM)
         else:
             print('aight, not doing anything')
+
+# -- commands --
+
+if __name__ == "__main__":
+    args = parser.parse_args()
+    if args.subcommand is None:
+        parser.print_help()
     else:
-        print(f'unknown action: {args.action}')
+        args.func(args)

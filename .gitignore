@@ -2,3 +2,4 @@ ubf_cfg.toml
 test_script.py
 test_script.pid
 restart_ubfchild.sh
+apsctest.py
