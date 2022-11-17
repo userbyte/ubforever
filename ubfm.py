@@ -59,7 +59,7 @@ if __name__ == "__main__":
         ubfsendsig(args.instance, signal.SIGUSR2)
     elif args.action == 'restart':
         print(f'sending restart signal to ubf[{args.instance}]')
-        ubfsendsig(args.instance, signal.SIGCONT)
+        ubfsendsig(args.instance, signal.SIGTSTP)
     elif args.action == 'terminate':
         yn = input('are you sure you want to terminate this instance of ubforever (it will need to be restart manually)? [y/n]: ')
         if yn.lower() in ['y','yes']:
