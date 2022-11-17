@@ -16,5 +16,5 @@ install -D -m 755 "ubf.py" "$INSTALLDIR/ubf.py"
 install -D -m 755 "ubfm.py" "$INSTALLDIR/ubfm.py"
 
 echo "creating symlinks for PATH (ubf and ubfm)"
-ln -s "$INSTALLDIR/ubf.py" "/home/$USER/.local/bin/ubf"
-ln -s "$INSTALLDIR/ubfm.py" "/home/$USER/.local/bin/ubfm"
+ln -s -f "$INSTALLDIR/ubf.py" "/home/$USER/.local/bin/ubf"
+ln -s -f "$INSTALLDIR/ubfm.py" "/home/$USER/.local/bin/ubfm"
