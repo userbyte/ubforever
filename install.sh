@@ -2,8 +2,8 @@
 
 # install script for ubforever
 
-# echo "installing python dependencies"
-# python3 -m pip install -r requirements.txt
+echo "installing python dependencies"
+python3 -m pip install -r requirements.txt
 
 # where the source files will live
 INSTALLDIR="/home/$USER/.local/src/ubf"
