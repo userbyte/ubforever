@@ -3,7 +3,7 @@
 import subprocess as sbp
 import sys, asyncio, time, toml, signal, os
 
-version = '0.0.3.2'
+version = '0.0.3.3'
 
 mypid = os.getpid()
 iname = 'untitled' # default iname
@@ -15,6 +15,7 @@ def printubf(s):
 def cleanup():
     try: cfg
     except NameError: return False
+    run_stopcmd()
     printubf('deleting pid file...')
     try:
         os.remove(f'/tmp/ubf/ubf-{iname}.pid')
@@ -28,7 +29,6 @@ def signal_handler(signum, frame):
     signame = signal.Signals(signum).name
     if signame in ['SIGTERM','SIGINT']: # signals to stop ubforever
         printubf(f'{signame} has been caught. Exiting...')
-        run_stopcmd()
         cleanup()
         time.sleep(2)
         exit()
@@ -124,10 +124,9 @@ try:
             # printubf('autorestart is disabled')
             time.sleep(wait)
 except KeyboardInterrupt:
-    printubf('caught KeyboardInterrupt. running program stop command...')
-    run_stopcmd()
-    printubf('UBForever exiting...')
+    printubf('caught KeyboardInterrupt. cleaning up...')
     cleanup()
+    printubf('UBForever exiting...')
     exit()
 except Exception as e:
     printubf(f'unexpected error: {e}')
