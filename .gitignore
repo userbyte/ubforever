@@ -6,3 +6,5 @@ apsctest.py
 release/
 mkrelease.sh
 dl-and-install-ubf.sh
+ubforever.sublime-project
+ubforever.sublime-workspace
